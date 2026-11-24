@@ -1,0 +1,202 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>어디서 만날까? 퇴근 후 만남 지도</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--a:#3182f6;--c:#fff;--t:#191f28;--s:#6b7684;--b1:#dbe9ff;--b2:#f4f8ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--c:#202632;--t:#f2f4f6;--s:#a3acb8;--b1:#1b2a44;--b2:#10151f}}
+*{box-sizing:border-box}body{margin:0;font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--t);background:linear-gradient(var(--b1),var(--b2)) fixed;min-height:100vh}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:0}
+main{position:relative;z-index:1;max-width:480px;margin:auto;padding:16px}
+h1{font-size:26px;line-height:1.3;margin:8px 4px 4px}.sub{color:var(--s);margin:0 4px 14px;font-size:15px}
+.card{background:var(--c);border-radius:24px;padding:16px;margin-bottom:12px;box-shadow:0 4px 18px #0001}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+input{flex:1;font:inherit;font-size:17px;padding:13px 14px;border:2px solid #0000;border-radius:16px;background:#8881;color:var(--t);outline:0;min-width:0}input:focus{border-color:var(--a)}
+.dot{width:14px;height:14px;border-radius:50%;flex:none}.ln{font-size:12px;color:var(--s);margin:-4px 0 8px 22px}
+button{font:inherit;border:0;border-radius:16px;padding:12px 14px;font-size:16px;cursor:pointer;background:#8881;color:var(--t)}
+button.p{background:var(--a);color:#fff;width:100%;font-size:18px;padding:15px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}.chips button{padding:9px 14px;border-radius:99px;font-size:15px}.chips button.on{background:var(--a);color:#fff}
+.lab{font-size:14px;color:var(--s);margin:8px 2px 6px}
+svg{width:100%;border-radius:20px;background:#f1ede6;display:block}
+.sgb{margin:2px 4px 2px 0;padding:6px 11px;border-radius:99px;font-size:13px;background:#3182f622;color:var(--a)}.ln{line-height:1.2}.zb{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}.zb button{width:38px;height:38px;padding:0;border-radius:12px;background:#fff;color:#333;font-size:20px;box-shadow:0 2px 8px #0003}.hub{cursor:pointer}.pin,.hub{transform-box:fill-box;transform-origin:center;transform:scale(var(--k,1))}.res{display:flex;gap:10px;align-items:center;padding:12px;border-radius:16px;cursor:pointer;margin-bottom:6px;background:#8881}
+.res.on{outline:2px solid var(--a)}.bd{background:var(--a);color:#fff;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.res small{color:var(--s);display:block;font-size:13px}.tag{display:inline-block;background:#3182f622;color:var(--a);border-radius:99px;padding:2px 9px;font-size:12px;margin:2px 3px 0 0}
+a{color:var(--a);text-decoration:none}.fd{margin:4px 0;font-size:15px}.w{display:flex;gap:8px}.w button{flex:1}
+#ov{position:fixed;inset:0;background:#000c;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;padding:16px}#ov img{max-height:78vh;max-width:90vw;border-radius:16px}
+</style></head><body><canvas id="fx"></canvas><main>
+<h1>오늘 어디서 만날까? 🎄</h1><p class="sub">출발역만 넣으면 퇴근길에 딱 만날 동네를 찾아드려요</p>
+<div class="card"><div class="lab">계절 배경</div><div class="chips" id="se"></div>
+<div class="lab">출발역 (2~5명)</div><div id="ppl"></div>
+<div class="row"><button id="add">＋ 사람 추가</button></div>
+<div class="lab">놀 장소 타입</div><div class="chips" id="md"></div>
+<button class="p" id="go">만날 장소 찾기</button></div>
+<div id="out" hidden><div class="card"><div style="position:relative"><svg id="map" viewBox="-80 -10 400 286.5" style="touch-action:none"></svg><div class="zb"><button id="zi">＋</button><button id="zo">－</button><button id="zr">⌂</button></div></div><div class="lab" style="text-align:center">두 손가락/휠로 확대·축소 · 드래그로 이동 · 핀을 누르면 상세</div></div>
+<div class="card" id="list"></div><div class="card" id="det" hidden></div>
+<div class="w"><button class="p" id="img">🖼 이미지로 저장</button><button class="p" id="sh">💬 카톡 공유</button></div></div>
+<p class="sub" style="font-size:12px;margin-top:14px">※ 이동시간은 노선 그래프 최단시간(환승 5분 포함)을 이용한 추정치이며 운영시간·매장은 변동될 수 있어요. 방문 전 카카오맵으로 확인해주세요.</p></main>
+<div id="ov"><img id="oi"><div>이미지를 길게 눌러 '사진에 추가'를 선택하세요</div><button onclick="ov.style.display='none'">닫기</button></div>
+<script>
+const $=id=>document.getElementById(id);
+const ST={};`김포공항,37.5625,126.8014,5·9·공항철도|마곡나루,37.5667,126.8272,9·공항철도|마곡,37.5601,126.8256,5|오목교,37.5243,126.8750,5|목동,37.5264,126.8644,5|영등포구청,37.5253,126.8966,2·5|영등포,37.5159,126.9075,1|신도림,37.5088,126.8913,1·2|여의도,37.5216,126.9243,5·9|샛강,37.5176,126.9293,9|여의나루,37.5270,126.9327,5|공덕,37.5442,126.9515,5·6·공항철도·경의중앙|합정,37.5495,126.9139,2·6|홍대입구,37.5572,126.9245,2·공항철도·경의중앙|서울역,37.5547,126.9707,1·4·공항철도·경의중앙|광화문,37.5710,126.9768,5|시청,37.5657,126.9769,1·2|용산,37.5299,126.9648,1·경의중앙|왕십리,37.5612,127.0371,2·5·경의중앙·수인분당|성수,37.5446,127.0560,2|건대입구,37.5404,127.0692,2·7|잠실,37.5133,127.1001,2·8|천호,37.5386,127.1236,5·8|하남시청,37.5395,127.2060,5|강남,37.4979,127.0276,2·신분당|선릉,37.5045,127.0490,2·수인분당|교대,37.4934,127.0140,2·3|고속터미널,37.5049,127.0049,3·7·9|신사,37.5164,127.0203,3·신분당|사당,37.4765,126.9816,2·4|동대문역사문화공원,37.5651,127.0079,2·4·5|가산디지털단지,37.4814,126.8825,1·7|판교,37.3948,127.1112,신분당·경강|이천,37.2800,127.4350,경강|수원,37.2657,127.0001,1·수인분당|운정,37.7080,126.7690,경의중앙|정발산,37.6586,126.7737,3|대화,37.6761,126.7478,3`.split('|').forEach(r=>{const a=r.split(',');ST[a[0]]={la:+a[1],ln:+a[2],L:a[3].split('·')}});
+const lev=(a,b)=>{const d=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return d[a.length][b.length]};
+const LN={'1':'도봉산@37.689/127.046,창동@37.653/127.047,녹천,월계,광운대,석계@37.615/127.065,신이문,외대앞,회기@37.589/127.058,청량리@37.580/127.047,제기동,신설동@37.575/127.025,동묘앞@37.572/127.016,동대문@37.571/127.011,종로5가,종로3가@37.571/126.992,종각,시청,서울역,남영,용산,노량진@37.514/126.942,대방,신길,영등포,신도림,구로@37.503/126.882,가산디지털단지,독산,금천구청@37.455/126.894,안양@37.401/126.922,군포@37.353/126.948,수원',
+'경강':'판교,이매@37.395/127.128,삼동@37.380/127.200,경기광주@37.400/127.250,초월@37.370/127.310,공지암@37.340/127.340,신둔도예촌@37.300/127.380,이천',
+'2':'시청,을지로입구,을지로3가,을지로4가,동대문역사문화공원,신당@37.566/127.018,상왕십리,왕십리,한양대@37.555/127.044,뚝섬,성수,건대입구,구의@37.537/127.086,강변,잠실나루,잠실,잠실새내,종합운동장@37.511/127.073,삼성@37.509/127.063,선릉,역삼,강남,교대,서초,방배@37.481/126.998,사당,낙성대,서울대입구@37.481/126.953,봉천@37.482/126.942,신림@37.484/126.930,신대방,구로디지털단지@37.485/126.901,대림@37.493/126.895,신도림,문래,영등포구청,당산@37.534/126.903,합정,홍대입구,신촌@37.555/126.937,이대,아현,충정로@37.560/126.964,시청',
+'3':'대화,주엽,정발산,마두,백석,대곡@37.631/126.811,원당,삼송,지축,구파발@37.636/126.919,연신내@37.619/126.921,불광@37.610/126.930,녹번,홍제@37.589/126.944,무악재,독립문,경복궁@37.576/126.973,안국@37.576/126.985,종로3가,을지로3가,충무로@37.561/126.994,동대입구,약수@37.554/127.011,금호,옥수@37.540/127.018,압구정,신사,잠원,고속터미널,교대,남부터미널@37.485/127.016,양재@37.484/127.034,매봉@37.487/127.027,도곡@37.491/127.055,대치,학여울,대청,일원,수서@37.487/127.102,가락시장@37.493/127.118,경찰병원,오금@37.502/127.128',
+'4':'당고개@37.670/127.079,상계,노원@37.655/127.062,창동,쌍문,수유@37.638/127.025,미아,미아사거리,길음@37.603/127.025,성신여대입구,한성대입구,혜화@37.582/127.002,동대문,동대문역사문화공원,충무로,명동@37.560/126.986,회현,서울역,숙대입구,삼각지@37.535/126.973,신용산,이촌@37.522/126.972,동작@37.503/126.980,총신대입구@37.486/126.982,사당',
+'5':'방화@37.577/126.813,개화산,김포공항,송정,마곡,발산@37.558/126.837,우장산,화곡@37.541/126.840,까치산@37.531/126.847,신정@37.520/126.858,목동,오목교,양평,영등포구청,영등포시장@37.523/126.906,신길,여의도,여의나루,마포@37.539/126.946,공덕,애오개@37.553/126.957,충정로,서대문@37.566/126.967,광화문,종로3가,을지로4가,동대문역사문화공원,청구@37.560/127.014,신금호,행당@37.557/127.030,왕십리,마장,답십리,장한평,군자@37.557/127.079,아차산@37.552/127.089,광나루@37.545/127.103,천호,강동@37.536/127.132,길동@37.537/127.140,굽은다리,명일@37.551/127.144,고덕@37.555/127.154,상일동@37.557/127.165,강일@37.558/127.176,미사@37.561/127.193,하남풍산,하남시청,하남검단산@37.540/127.223',
+'6':'응암@37.598/126.915,역촌,불광,독바위,연신내,구산,새절,증산,디지털미디어시티@37.577/126.900,월드컵경기장@37.569/126.899,마포구청,망원@37.556/126.910,합정,상수@37.548/126.923,광흥창,대흥,공덕,효창공원앞@37.539/126.961,삼각지,녹사평,이태원@37.534/126.994,한강진@37.539/127.002,버티고개,약수,청구,신당,동묘앞,창신,보문@37.585/127.019,안암,고려대@37.590/127.036,월곡,상월곡,돌곶이,석계,태릉입구@37.618/127.075,화랑대,봉화산@37.617/127.091',
+'7':'장암@37.700/127.053,도봉산,수락산,마들,노원,중계,하계@37.636/127.068,공릉,태릉입구,먹골,중화,상봉@37.597/127.085,면목,사가정,용마산@37.573/127.087,중곡,군자,어린이대공원,건대입구,뚝섬유원지,청담@37.519/127.052,강남구청@37.517/127.041,학동,논현@37.511/127.021,반포,고속터미널,내방@37.488/126.994,총신대입구,남성,숭실대입구@37.496/126.953,상도,장승배기,신대방삼거리,보라매@37.500/126.920,신풍,대림,남구로,가산디지털단지,철산,광명사거리,천왕,온수@37.492/126.824',
+'8':'암사@37.550/127.127,천호,강동구청,몽촌토성,잠실,석촌@37.505/127.107,송파,가락시장,문정,장지,복정@37.470/127.126,산성,남한산성입구,단대오거리,신흥,수진,모란@37.432/127.129',
+'9':'개화@37.578/126.798,김포공항,공항시장,신방화@37.567/126.817,마곡나루,양천향교,가양@37.561/126.854,증미,등촌,염창@37.547/126.875,신목동,선유도,당산,국회의사당,여의도,샛강,노량진,노들,흑석@37.508/126.964,동작,구반포,신반포,고속터미널,사평,신논현@37.505/127.025,언주,선정릉@37.510/127.043,삼성중앙,봉은사,종합운동장,삼전,석촌고분,석촌,송파나루,한성백제,올림픽공원@37.516/127.131,둔촌오륜,중앙보훈병원@37.529/127.148',
+'경의중앙':'운정,일산@37.682/126.769,대곡,능곡@37.618/126.822,행신@37.612/126.834,화전@37.601/126.868,수색@37.581/126.896,디지털미디어시티,가좌@37.568/126.915,신촌,서강대@37.552/126.935,홍대입구,공덕,서울역,용산,이촌,서빙고@37.520/126.988,한남@37.529/127.009,옥수,응봉@37.549/127.034,왕십리,청량리,회기,중랑@37.594/127.076,상봉,망우@37.599/127.092,양원@37.607/127.107,구리@37.603/127.143,도농@37.608/127.161,덕소@37.587/127.209',
+'공항철도':'김포공항,마곡나루,디지털미디어시티,홍대입구,공덕,서울역',
+'신분당':'신사,논현,신논현,강남,양재,양재시민의숲@37.470/127.038,청계산입구@37.447/127.055,판교',
+'수인분당':'왕십리,서울숲@37.544/127.044,압구정로데오@37.527/127.039,강남구청,선정릉,선릉,한티@37.496/127.052,도곡,구룡@37.487/127.059,개포동@37.489/127.066,대모산입구@37.492/127.080,수서',
+'우이신설':'북한산우이@37.663/127.012,솔밭공원,4.19민주묘지,가오리,화계,삼양,삼양사거리,솔샘,북한산보국문,정릉,성신여대입구,보문',
+'신림선':'샛강,대방,서울지방병무청,보라매,보라매공원,보라매병원,당곡,신림,서원,서울대벤처타운,관악산@37.466/126.947'};
+const LI=Object.entries(LN).map(([l,s])=>[l,s.split(',').map(t=>{const [n,c]=t.split('@');if(c&&!ST[n]){const[a,b]=c.split('/');ST[n]={la:+a,ln:+b,L:[]}}return n})]);
+LI.forEach(([l,a])=>{const k=a.map((n,i)=>ST[n]?i:-1).filter(i=>i>=0);a.forEach((n,i)=>{if(ST[n])return;let p=k.filter(j=>j<i).pop(),q=k.find(j=>j>i);if(p===undefined)p=q;if(q===undefined)q=p;const A=ST[a[p]],B=ST[a[q]],t=p==q?0:(i-p)/(q-p);ST[n]={la:A.la+(B.la-A.la)*t+(p==q?.003*(i-p):0),ln:A.ln+(B.ln-A.ln)*t,L:[]}})});
+LI.forEach(([l,a])=>a.forEach(n=>{if(!ST[n].L.includes(l))ST[n].L.push(l)}));
+const nz=v=>v.replace(/\s/g,'').replace(/역$/,'');
+const ex=v=>{v=v.replace(/\s/g,'');for(const c of [v,nz(v),nz(v)+'역'])if(ST[c])return c;return null};
+const sug=v=>{const s=nz(v);if(!s)return[];return Object.keys(ST).map(k=>{const kk=k.replace(/역$/,'');const d=kk==s?0:kk.startsWith(s)?.5:(kk.includes(s)||(kk.length>1&&s.includes(kk)))?1:s.length>=2?lev(s,kk):9;return{k,d}}).filter(r=>r.d<=2).sort((a,b)=>a.d-b.d).slice(0,6)};
+const fzG=v=>{const e=ex(v);if(e)return e;const r=sug(v);if(r.length==1||(r.length>1&&r[0].d<r[1].d&&r[0].d<=1))return r[0].k;return null};
+// [역,이름,타입,한줄,실내마감,[식당],[산책명,분,운영]]
+const H=[
+['마곡나루','마곡 원그로브몰','in','몰·영화·쇼핑','22:00',['한식 샤브·비빔밥','중식 딤섬','일식 돈카츠','양식 파스타'],['서울식물원 산책','25분','야외 상시·온실 ~18시']],
+['여의도','여의도 IFC몰','in','몰·영화·루프탑','22:00',['한식 한상차림','중식 마라탕','일식 오마카세','양식 스테이크'],['여의도공원 한바퀴','20분','상시']],
+['영등포','영등포 타임스퀘어','in','대형몰·영화·서점','22:00',['한식 고기집','중식 훠궈','일식 라멘','양식 브런치'],['문래 창작촌 골목','20분','상시']],
+['공덕','공덕 이마트·롯데캐슬상가','in','마트·상가 맛집 밀집','22:00',['한식 족발·전','중식 짜장','일식 이자카야','양식 피자'],['경의선숲길','25분','상시']],
+['오목교','목동 현대백화점','in','백화점·영화·CGV','22:00',['한식 백반','중식 탕수육','일식 스시','양식 파스타'],['안양천 산책','20분','상시(야간 조명)']],
+['샛강','샛강역 63빌딩','mix','아쿠아리움·전망대','21:00',['한식 뷔페','중식 광동요리','일식 정식','양식 레스토랑'],['샛강생태공원','25분','상시']],
+['잠실','잠실 롯데월드몰','in','월드몰·아쿠아리움','22:00',['한식 고깃집','중식 딤섬','일식 텐동','양식 스테이크'],['석촌호수 산책','30분','상시·겨울 조명']],
+['강남','강남역 지하상가·신세계','in','지하상가·영화관','22:00',['한식 삼겹살','중식 마라','일식 이자카야','양식 파스타'],['신논현 거리','15분','상시']],
+['판교','판교 현대백화점·아브뉴프랑','in','백화점·카페','22:00',['한식 한정식','중식 짬뽕','일식 라멘','양식 브런치'],['화랑공원','20분','상시']],
+['하남시청','하남 스타필드(버스·도보)','in','스타필드·실내 놀이','22:00',['한식 푸드코트','중식 딤섬','일식 돈카츠','양식 버거'],['미사 한강공원','30분','상시']],
+['홍대입구','홍대·연남','mix','공방·소품샵·공연','24:00',['한식 닭갈비','중식 연남 중식당','일식 이자카야','양식 파스타'],['연트럴파크','20분','상시']],
+['성수','성수 카페거리','mix','팝업·카페·편집숍','21:30',['한식 곱창','중식 마라','일식 스시','양식 피자'],['서울숲 산책','30분','상시']],
+['건대입구','건대 커먼그라운드·로데오','mix','컨테이너몰·펍','23:00',['한식 양꼬치','중식 마라','일식 라멘','양식 버거'],['건대 로데오거리','15분','상시']],
+['합정','합정·망원','mix','소품샵·카페','22:00',['한식 국밥','중식 짜장','일식 라멘','양식 파스타'],['망원한강공원','25분','상시']],
+['서울역','서울역 롯데마트·서울로7017','mix','마트·보행길','22:00',['한식 설렁탕','중식 짬뽕','일식 우동','양식 스테이크'],['서울로7017','20분','상시']],
+['여의나루','여의도 한강공원','out','야경·산책·피크닉','상시',['한식 치킨·라면','중식 배달','일식 김밥','양식 샌드위치'],['한강 야경 산책','30분','상시']],
+['광화문','광화문·청계천','out','청계천·광장·야경','상시',['한식 한정식','중식 청요리','일식 소바','양식 파스타'],['청계천 산책','30분','상시']]];
+const PC=['#3182f6','#f04452','#00c471','#ff9f0a','#8b5cf6'],AL='가나다라마바사';
+const X=l=>(l-126.70)*400,Y=a=>(37.72-a)*560;
+const SE={'겨울':['#dbe9ff','#f4f8ff','❄'],'봄':['#ffe4ef','#fff8fb','🌸'],'여름':['#c8f0ff','#fffbe6','☀'],'가을':['#ffe2c0','#fff6ea','🍁']};
+let season='겨울',mode='in',R=[],P=[],sel=-1,pf=[];
+const dl=document.createElement('datalist');dl.id='st';dl.innerHTML=Object.keys(ST).map(s=>`<option value="${s}">`).join('');document.body.append(dl);
+$('se').innerHTML=Object.keys(SE).map(k=>`<button data-k="${k}">${k}</button>`).join('');
+$('md').innerHTML=[['in','🏬 실내만'],['mix','🌓 실내+실외'],['out','🌲 실외만']].map(a=>`<button data-m="${a[0]}">${a[1]}</button>`).join('');
+function setS(k){season=k;const s=SE[k];document.documentElement.style.setProperty('--b1',s[0]);document.documentElement.style.setProperty('--b2',s[1]);[...$('se').children].forEach(b=>b.classList.toggle('on',b.dataset.k==k));pf=[];}
+$('se').onclick=e=>e.target.dataset.k&&setS(e.target.dataset.k);
+$('md').onclick=e=>{if(e.target.dataset.m){mode=e.target.dataset.m;[...$('md').children].forEach(b=>b.classList.toggle('on',b.dataset.m==mode))}};
+function addP(v=''){if($('ppl').children.length>=5)return;const i=$('ppl').children.length;const d=document.createElement('div');d.innerHTML=`<div class="row"><span class="dot" style="background:${PC[i]}"></span><input list="st" placeholder="${i+1}번째 출발역 (예: 여의도)" value="${v}"></div><div class="ln"></div>`;const inp=d.querySelector('input'),ln=d.querySelector('.ln');inp.oninput=()=>{const v=inp.value.trim(),k=ex(v);if(k){ln.textContent='🚇 '+ST[k].L.map(l=>/^\d$/.test(l)?l+'호선':l).join(' · ');return}const r=sug(v);ln.innerHTML=v?(r.length?'혹시 이 역인가요? ':'찾을 수 없는 역이에요 ')+r.map(x=>`<button class="sgb">${x.k}</button>`).join(''):'';ln.querySelectorAll('.sgb').forEach(b=>b.onclick=()=>{inp.value=b.textContent;inp.oninput()})};inp.oninput();$('ppl').append(d)}
+$('add').onclick=()=>addP();addP('김포공항');addP('여의도');setS('겨울');$('md').children[0].classList.add('on');
+const dist=(a,b)=>Math.hypot((a.ln-b.ln)*88.3,(a.la-b.la)*111);
+const NI={},NN=[],AD=[],BS={};const nid=(s,l)=>{const k=s+'@'+l;if(NI[k]===undefined){NI[k]=NN.length;NN.push([s,l])}return NI[k]};
+const ae=(a,b,w,t)=>{(AD[a]=AD[a]||[]).push([b,w,t]);(AD[b]=AD[b]||[]).push([a,w,t])};
+LI.forEach(([l,a])=>{for(let i=0;i<a.length;i++){nid(a[i],l);if(i&&a[i]!=a[i-1])ae(nid(a[i-1],l),nid(a[i],l),dist(ST[a[i-1]],ST[a[i]])*1.3+.8,0)}});
+NN.forEach(([s],i)=>(BS[s]=BS[s]||[]).push(i));Object.values(BS).forEach(a=>{for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)ae(a[i],a[j],5,1)});
+const dj=s=>{const n=NN.length,D=Array(n).fill(1e9),V=Array(n).fill(0),T=Array(n).fill(0);(BS[s]||[]).forEach(i=>D[i]=0);for(let k=0;k<n;k++){let u=-1;for(let i=0;i<n;i++)if(!V[i]&&(u<0||D[i]<D[u]))u=i;if(u<0||D[u]>=1e9)break;V[u]=1;(AD[u]||[]).forEach(([v,w,t])=>{if(D[u]+w<D[v]){D[v]=D[u]+w;T[v]=T[u]+t}})}return{D,T}};
+const best=(d,s)=>{let b=1e9,tr=0;(BS[s]||[]).forEach(i=>{if(d.D[i]<b){b=d.D[i];tr=d.T[i]}});return[Math.round(b)+5,tr]};
+const H2=`마곡나루|마곡 원그로브몰|in|몰·영화·식물원 근처|22:00|서울식물원 산책|25분|야외 상시·온실 일찍 마감
+김포공항|롯데몰 김포공항|in|몰·영화·아쿠아|22:00|궁산 소악루길 산책|30분|상시
+여의도|여의도 IFC몰|in|몰·영화·루프탑|22:00|여의도공원 한바퀘|20분|상시
+영등포|영등포 타임스퀘어|in|대형몰·영화·서점|22:00|문래 창작촌 골목|20분|상시
+신도림|신도림 디큐브시티|in|몰·영화·식당가|22:00|도림천 산책|20분|상시
+공덕|공덕 이마트·롯데캐슬상가|in|마트·상가 맛집 밀집|22:00|경의선숲길|25분|상시
+오목교|목동 현대백화점·CGV|in|백화점 식당가·영화|22:00|안양천 산책|20분|상시
+용산|용산 아이파크몰|in|몰·영화·전망|22:00|전쟁기념관 앞뜰|20분|상시
+고속터미널|센트럴시티·신세계 강남|in|몰·영화·쇼핑|22:00|서래섬·반포한강공원|30분|상시
+삼성|코에스몰·별마당도서관|in|몰·영화·수족관|22:00|봉은사 산책|20분|상시(야간 조명)
+잠실|잠실 롯데월드몰|in|월드몰·아쿠아리움|22:00|석촌호수 산책|30분|상시
+석촌|송리단길·석촌호수|mix|카페·맛집 골목|22:00|석촌호수 산책|30분|상시
+강남|강남역 지하상가·신세계|in|지하상가·영화관|22:00|신논현 거리|15분|상시
+판교|판교 아브뉴프랑·현대백화점|in|백화점·카페·식당가|22:00|화랑공원|20분|상시
+하남시청|하남 스타필드(버스·도보)|in|스타필드·실내 놀이|22:00|미사 한강공원|30분|상시
+왕십리|왕십리 엔터식스·CGV|in|몰·영화·식당가|22:00|서울숲 산책|30분|상시
+홍대입구|홍대·연남|mix|공방·소품샵·공연|24:00|연트럴파크|20분|상시
+합정|합정·망원|mix|소품샵·카페|22:00|망원한강공원|25분|상시
+신촌|신촌·이대 골목|mix|영화·쇼핑·카페|22:00|연세로 산책|15분|상시
+성수|성수 카페거리|mix|팝업·카페·편집숍|21:30|서울숲 산책|30분|상시
+건대입구|건대 커먼그라운드·로데오|mix|컨테이너몰·퍹|23:00|건대 로데오거리|15분|상시
+서울역|서울역 롯데마트·서울로7017|mix|마트·보행길|22:00|서울로7017|20분|상시
+명동|명동·남산|mix|쇼핑·롯데백화점|22:00|남산 둘레길|40분|상시(야간 조명)
+회현|신세계 본점·남대문|mix|백화점 겸울 장식·시장|20:30|남산 소월길 입구|30분|상시
+시청|덕수궁·서울광장|out|광장·궁 돌담길|상시|덕수궁 돌담길|20분|상시
+광화문|광화문·청계천|out|청계천·광장·야경|상시|청계천 산책|30분|상시
+종로3가|익선동·종로|mix|한옥 카페·골목 맛집|22:00|익선동 한옥골목|20분|상시
+을지로3가|을지로 힙지로|mix|노포·바 골목|24:00|을지로 골목 산책|20분|상시
+동대문역사문화공원|DDP·동대문 쇼핑|mix|DDP·심야 쇼핑몰|24:00|DDP 주변·성곽길|25분|상시
+혜화|대학로·낙산공원|mix|공연·카페|22:00|낙산공원 성곽길|30분|상시(야간 조명)
+안국|북촌·인사동|mix|한옥·갤러리·찻집|21:00|북촌 한옥마을 산책|30분|상시
+경복궁|서촌·경복궁|out|서촌 골목·궁 주변|22:00|서촌 골목 산책|30분|상시
+청구|신당·청구(남산 자락)|mix|떡볶이타운·카페|22:00|남산 자락길|30분|상시
+이태원|이태원·해방촌|mix|바·맛집 골목|24:00|해방촌 언덕길|25분|상시
+이촌|국립중앙박물관·용산가족공원|out|전시·공원|21:00|용산가족공원|25분|공원 상시(박물관 야간 운영일 확인)
+여의나루|여의도 한강공원|out|야경·피크닉|상시|한강 야경 산책|30분|상시
+샛강|샛강역 63빌딩|mix|아쿠아리움·전망대|21:00|샛강생태공원|25분|상시
+선유도|선유도공원|out|산업유산 공원·야경|상시|선유도공원 산책|30분|시간 확인 필요
+월드컵경기장|월드컵공원|out|공원·산책|상시|월드컵공원 산책|40분|상시(하늘공원은 일몰 전)
+뚝섬유원지|뚝섬한강공원|out|한강·피크닉|상시|한강 산책|30분|상시
+올림픽공원|올림픽공원·몽촌토성|out|호수·잔디·산책|22:00|몽촌토성 산책|40분|상시
+서울대입구|샤로수길·관악산|mix|맛집 골목|23:00|관악산 입구 산책|40분|일몰 전 권장
+정발산|일산 라페스타·호수공원|mix|먹자골목·영화|22:00|일산호수공원|40분|상시
+수원|수원 AK플라자·행궤동|mix|백화점·화성 야경|22:00|수원화성 행궤동길|40분|상시(야간 조명)
+구파발|북한산 둘레길 입구|out|산·계곡 산책|일몰전|북한산 둘레길|50분|일몰 전 권장(야간 비추천)
+청계산입구|청계산 산책|out|산·카페|일몰전|청계산 옥녀봉 코스|60분|일몰 전 권장`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2],a[3],a[4],['한식 추천','중식 추천','일식 추천','양식 추천'],[a[5],a[6],a[7]]]}).filter(h=>ST[h[0]]);
+const tm=(p,h)=>Math.round(dist(p,h)*2.2+8+(p.L.some(l=>h.L.includes(l))?0:8));
+$('go').onclick=()=>{
+const lev=(a,b)=>{const d=Array.from({length:a.length+1},(_,i)=>[i,...Array(b.length).fill(0)]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return d[a.length][b.length]};
+const fz=v=>fzG(v);const fzOld=v=>{v=v.replace(/\s/g,'');const s=v.replace(/역$/,'');for(const c of [v,s,s+'역'])if(ST[c])return c;if(!s)return null;let b=null,bd=9;Object.keys(ST).forEach(k=>{const kk=k.replace(/역$/,'');let d=lev(s,kk);if(s.length>=2&&(kk.includes(s)||s.includes(kk)))d=Math.min(d,1);if(d<bd){bd=d;b=k}});return bd<=2?b:null};
+const ins=[...document.querySelectorAll('#ppl input')].filter(i=>i.value.trim());const bad=[];
+P=ins.map(i=>{const k=fz(i.value);if(!k){bad.push(i.value);i.oninput();return null}i.value=k;i.oninput();return{n:k,...ST[k]}}).filter(Boolean);
+if(bad.length){alert('확실하지 않은 역이에요 (입력창 아래 후보에서 골라주세요): '+bad.join(', ')+'\n서울·경기 지하철역 이름으로 다시 입력해주세요');return}
+if(P.length<2){alert('2명 이상의 출발역을 입력해주세요');return}
+const ok=mode=='in'?['in']:mode=='out'?['out','mix']:['in','mix','out'];
+const DJ=P.map(p=>dj(p.n));R=H2.filter(h=>ok.includes(h[2])).map(h=>{const s=ST[h[0]],b=DJ.map(d=>best(d,h[0])),t=b.map(x=>x[0]),tr=b.map(x=>x[1]),mx=Math.max(...t);return{h,s,t,tr,mx,sc:mx+.6*(mx-Math.min(...t))+2*Math.max(...tr)}}).filter(r=>r.mx<=60).sort((a,b)=>a.sc-b.sc).slice(0,6);
+$('out').hidden=false;if(!R.length){$('list').innerHTML='60분 안에 모두 모일 곳이 없어요. 출발역을 바꿔보세요 🥲';draw();return}
+sel=-1;draw();list();setTimeout(()=>$('out').scrollIntoView({behavior:'smooth'}),50)};
+const VB=[-80,-10,400,286.5];let cur=VB.slice(),raf;
+const pt=a=>a.map(([l,t])=>X(l).toFixed(1)+','+Y(t).toFixed(1)).join(' ');
+const mt=(l,t,rx,ry,n)=>`<ellipse cx="${X(l)}" cy="${Y(t)}" rx="${rx}" ry="${ry}" fill="#d7ebcc"/><text x="${X(l)}" y="${Y(t)+2}" font-size="5" text-anchor="middle" fill="#7a9a6a">${n}</text>`;
+const BASE=`<rect x="-400" y="-300" width="1200" height="900" fill="#a9d3f5" onclick="pick(-1)"/><polygon points="${pt([[126.62,37.9],[126.60,37.62],[126.62,37.52],[126.60,37.46],[126.70,37.40],[126.76,37.33],[126.80,37.1],[128.3,37.1],[128.3,37.9]])}" fill="#f3f0e8" onclick="pick(-1)"/>${mt(127.0,37.66,15,9,'북한산')}${mt(126.96,37.45,12,8,'관악산')}${mt(127.18,37.47,11,8,'남한산성')}${mt(127.1,37.70,9,6,'수락산')}${mt(126.73,37.575,8,6,'계양산')}${mt(127.05,37.43,8,5,'청계산')}<polyline points="${pt([[126.60,37.76],[126.74,37.64],[126.84,37.58],[126.93,37.525],[127.02,37.518],[127.10,37.525],[127.17,37.545],[127.28,37.56],[127.40,37.575]])}" fill="none" stroke="#a9d3f5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><text x="${X(126.5)}" y="${Y(37.5)}" font-size="9" fill="#5b93c9">서해</text><text x="${X(127.02)}" y="${Y(37.503)}" font-size="5" fill="#5b93c9">한강</text>`;
+function vb(t){cancelAnimationFrame(raf);const f=cur.slice();let k=0;(function s(){k+=.08;cur=f.map((v,i)=>v+(t[i]-v)*Math.min(k,1));$('map').setAttribute('viewBox',cur.join(' '));$('map').style.setProperty('--k',Math.pow(VB[2]/cur[2],.35));if(k<1)raf=requestAnimationFrame(s)})()}
+function draw(){let s=BASE;
+R.forEach((r,i)=>{const x=X(r.s.ln),y=Y(r.s.la);P.forEach((p,j)=>s+=`<line x1="${X(p.ln)}" y1="${Y(p.la)}" x2="${x}" y2="${y}" stroke="${PC[j]}" stroke-width=".7" stroke-dasharray="2 2" opacity="${sel<0||sel==i?.7:.1}"/>`)});
+R.forEach((r,i)=>{const x=X(r.s.ln),y=Y(r.s.la);s+=`<g class="hub" onclick="pick(${i})"><circle cx="${x}" cy="${y}" r="${sel==i?9:7}" fill="${sel==i?'#f04452':'#3182f6'}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+3}" font-size="8" fill="#fff" text-anchor="middle">${AL[i]}</text><text x="${x}" y="${y-10}" font-size="6.5" text-anchor="middle" fill="#191f28" stroke="#fff" stroke-width="2.5" paint-order="stroke">${r.h[1].split(' ')[0]}</text></g>`});
+P.forEach((p,j)=>s+=`<g class="pin"><circle cx="${X(p.ln)}" cy="${Y(p.la)}" r="5" fill="${PC[j]}" stroke="#fff" stroke-width="2"/><text x="${X(p.ln)}" y="${Y(p.la)+13}" font-size="6.5" text-anchor="middle" fill="#333" stroke="#fff" stroke-width="2.5" paint-order="stroke">${p.n}</text></g>`);
+$('map').innerHTML=s}
+function list(){$('list').innerHTML=R.map((r,i)=>`<div class="res ${sel==i?'on':''}" onclick="pick(${i})"><span class="bd">${AL[i]}</span><div><b>${r.h[1]}</b><small>${r.h[3]} · ${r.t.map((t,j)=>P[j].n+' '+t+'분').join(' / ')}</small></div></div>`).join('')}
+window.pick=i=>{if(moved>6)return;sel=i;draw();list();if(i<0){vb(VB);$('det').hidden=true;return}
+const r=R[i],x=X(r.s.ln),y=Y(r.s.la);vb([x-45,y-32,90,64.5]);const h=r.h,q=e=>encodeURI('https://map.kakao.com/link/search/'+e);
+$('det').hidden=false;$('det').innerHTML=`<h3 style="margin:0 0 6px">${AL[i]}) ${h[1]}</h3>🚇 <b>인접역</b> ${h[0]}역 (${r.s.L.map(l=>/^\d$/.test(l)?l+'호선':l).join('·')})<br>🚇 <b>각자 이동</b> ${r.t.map((t,j)=>P[j].n+' '+t+'분'+(r.tr[j]?'(환승'+r.tr[j]+')':'')).join(' · ')}<br>🕘 <b>실내 이용</b> ${h[4]=='상시'?'야외 상시':'~'+h[4]} · 퇴근 후 도착 기준<div class="lab">🍽 대표 식당 (카카오맵 검색)</div>${h[5].map(f=>{const [c,...m]=f.split(' ');return`<div class="fd"><span class="tag">${c}</span><a href="${q(h[1].split(' ')[0]+' '+c+'맛집')}" target="_blank">${m.join(' ')} 맛집 보기 ›</a></div>`}).join('')}<div class="lab">🚶 산책 코스</div><div class="fd"><b>${h[6][0]}</b> · 약 ${h[6][1]}<br><small>운영: ${h[6][2]}</small></div>`;
+$('det').scrollIntoView({behavior:'smooth',block:'nearest'})};
+function sum(){return '🎄 오늘 만날 곳 후보\n'+P.map(p=>'📍'+p.n).join(' · ')+'\n'+R.slice(0,3).map((r,i)=>`${AL[i]}) ${r.h[1]} (최대 ${r.mx}분) - ${r.h[3]}`).join('\n')+'\n👉 '+location.href}
+$('sh').onclick=async()=>{if(!R.length)return;const t=sum();try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e.name=='AbortError')return}try{await navigator.clipboard.writeText(t);alert('복사됐어요! 카톡 대화창에 붙여넣기 하세요 💬')}catch(e){prompt('복사해서 카톡에 붙여넣기',t)}};
+$('img').onclick=async()=>{if(!R.length)return;try{await document.fonts.load('30px Jua')}catch(e){}
+const W=1179,Hh=2556,c=document.createElement('canvas');c.width=W;c.height=Hh;const g=c.getContext('2d'),s=SE[season];
+const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,s[0]);gr.addColorStop(1,s[1]);g.fillStyle=gr;g.fillRect(0,0,W,Hh);g.font='60px Jua,sans-serif';for(let i=0;i<40;i++)g.fillText(s[2],Math.random()*W,Math.random()*Hh);
+g.textAlign='center';g.fillStyle='#191f28';g.font='84px Jua,sans-serif';g.fillText('오늘 여기서 만나요 '+s[2],W/2,300);
+g.font='46px Jua,sans-serif';g.fillStyle='#4e5968';g.fillText(P.map(p=>p.n).join(' · '),W/2,380);
+const rr=(x,y,w,h,r,f)=>{g.fillStyle=f;g.beginPath();g.roundRect(x,y,w,h,r);g.fill()};
+rr(90,450,999,640,50,'#fff');const mx=(l)=>120+(l-126.7)*(940/0.8)*0.9,my=(a)=>480+(37.72-a)*(580/0.47)*0.9;g.strokeStyle='#a9d1f7';g.lineWidth=18;g.lineCap='round';g.beginPath();g.moveTo(mx(126.75),my(37.62));g.quadraticCurveTo(mx(126.85),my(37.57),mx(126.93),my(37.525));g.lineTo(mx(127.1),my(37.52));g.lineTo(mx(127.3),my(37.56));g.stroke();
+R.slice(0,6).forEach((r,i)=>{g.fillStyle='#3182f6';g.beginPath();g.arc(mx(r.s.ln),my(r.s.la),26,0,7);g.fill();g.fillStyle='#fff';g.font='34px Jua,sans-serif';g.fillText(AL[i],mx(r.s.ln),my(r.s.la)+12)});
+P.forEach((p,j)=>{g.fillStyle=PC[j];g.beginPath();g.arc(mx(p.ln),my(p.la),16,0,7);g.fill();g.fillStyle='#333';g.font='30px Jua,sans-serif';g.fillText(p.n,mx(p.ln),my(p.la)+44)});
+R.slice(0,3).forEach((r,i)=>{const y=1140+i*440;rr(90,y,999,400,50,'#fff');g.textAlign='left';g.fillStyle='#3182f6';g.font='56px Jua,sans-serif';g.fillText(AL[i]+') '+r.h[1],140,y+95);g.fillStyle='#191f28';g.font='42px Jua,sans-serif';g.fillText('🚇 '+r.h[0]+'역 · '+r.t.map((t,j)=>P[j].n+' '+t+'분').join(' / '),140,y+170);g.fillText('✨ '+r.h[3],140,y+240);g.fillText('🍽 '+r.h[5].slice(0,3).map(f=>f.split(' ')[0]).join('·')+'  🚶 '+r.h[6][0],140,y+310);g.fillStyle='#8b95a1';g.font='34px Jua,sans-serif';g.fillText('실내 '+(r.h[4]=='상시'?'야외 상시':'~'+r.h[4])+' · 산책 '+r.h[6][1],140,y+368);g.textAlign='center'});
+$('oi').src=c.toDataURL('image/png');$('ov').style.display='flex'};
+const mp=$('map'),AR=VB[3]/VB[2],ptr=new Map();let moved=0,pd=0;
+const kk=()=>mp.style.setProperty('--k',Math.pow(VB[2]/cur[2],.35));const setV=()=>{cur[3]=cur[2]*AR;kk();mp.setAttribute('viewBox',cur.map(v=>+v.toFixed(2)).join(' '))};
+const zoomAt=(f,cx,cy)=>{cancelAnimationFrame(raf);const w=cur[2],nw=Math.max(36,Math.min(520,w*f));f=nw/w;cur[0]=cx-(cx-cur[0])*f;cur[1]=cy-(cy-cur[1])*f;cur[2]=nw;setV()};
+const sp=(x,y)=>{const r=mp.getBoundingClientRect();return[cur[0]+(x-r.left)/r.width*cur[2],cur[1]+(y-r.top)/r.height*cur[3]]};
+const d2=()=>{const [a,b]=[...ptr.values()];return Math.hypot(a[0]-b[0],a[1]-b[1])};
+mp.addEventListener('wheel',e=>{e.preventDefault();const[x,y]=sp(e.clientX,e.clientY);zoomAt(e.deltaY>0?1.15:.87,x,y)},{passive:false});
+mp.addEventListener('pointerdown',e=>{ptr.set(e.pointerId,[e.clientX,e.clientY]);moved=0;cancelAnimationFrame(raf);pd=ptr.size==2?d2():0});
+addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId))return;const o=ptr.get(e.pointerId),r=mp.getBoundingClientRect();ptr.set(e.pointerId,[e.clientX,e.clientY]);
+if(ptr.size==1){const dx=e.clientX-o[0],dy=e.clientY-o[1];moved+=Math.abs(dx)+Math.abs(dy);if(moved>6){cur[0]-=dx/r.width*cur[2];cur[1]-=dy/r.height*cur[3];setV()}}
+else if(ptr.size==2&&pd){const d=d2(),[a,b]=[...ptr.values()],[cx,cy]=sp((a[0]+b[0])/2,(a[1]+b[1])/2);moved=99;zoomAt(pd/d,cx,cy);pd=d}});
+const up=e=>{ptr.delete(e.pointerId);pd=0;setTimeout(()=>moved=0,60)};addEventListener('pointerup',up);addEventListener('pointercancel',up);
+const cz=f=>zoomAt(f,cur[0]+cur[2]/2,cur[1]+cur[3]/2);$('zi').onclick=()=>cz(.7);$('zo').onclick=()=>cz(1.4);$('zr').onclick=()=>vb(VB);
+// 눈/꽃 효과
+const fx=$('fx'),fg=fx.getContext('2d');function rs(){fx.width=innerWidth;fx.height=innerHeight}rs();onresize=rs;
+(function a(){if(!pf.length)pf=Array.from({length:35},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,v:.5+Math.random()*1.2,s:12+Math.random()*14,d:Math.random()*6}));fg.clearRect(0,0,fx.width,fx.height);fg.globalAlpha=.7;pf.forEach(p=>{p.y+=p.v;p.d+=.02;p.x+=Math.sin(p.d);if(p.y>fx.height+20){p.y=-20;p.x=Math.random()*fx.width}fg.font=p.s+'px sans-serif';fg.fillText(SE[season][2],p.x,p.y)});requestAnimationFrame(a)})();
+</script></body></html>
